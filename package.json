@@ -1,6 +1,6 @@
 {
-  "name" : "net-oce-protocol",
-  "version" : "1.0.0",
+  "name": "net-oce-protocol",
+  "version": "1.0.0",
   "description": "protocol definition for talking with net-oce",
   "dependencies": {
     "protobuf-schema": "^1.0.2",
@@ -8,5 +8,25 @@
   },
   "devDependencies": {
     "tape": "^2.14.0"
-  }
+  },
+  "main": "net-oce-protocol.js",
+  "scripts": {
+    "test": "node test.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/solids/net-oce-protocol.git"
+  },
+  "keywords": [
+    "oce",
+    "net-oce",
+    "protocol",
+    "protobuf"
+  ],
+  "author": "Elijah Insua <tmpvar@gmail.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/solids/net-oce-protocol/issues"
+  },
+  "homepage": "https://github.com/solids/net-oce-protocol"
 }
