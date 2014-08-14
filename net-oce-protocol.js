@@ -4,8 +4,11 @@ var fs = require('fs');
 var schemaContents = fs.readFileSync(path.join(__dirname, 'oce.proto'));
 var proto = require('protocol-buffers')(schemaContents);
 var obj = require('protobuf-schema').parse(schemaContents);
-console.log(proto);
-module.exports.schema = schema;
+
+var schema = module.exports = {
+  objects: proto
+
+};
 
 obj.messages.forEach(function(message) {
   var enums = {}
