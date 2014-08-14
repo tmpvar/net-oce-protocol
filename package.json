@@ -1,4 +1,7 @@
 {
+  "name" : "net-oce-protocol",
+  "version" : "1.0.0",
+  "description": "protocol definition for talking with net-oce",
   "dependencies": {
     "protobuf-schema": "^1.0.2",
     "protocol-buffers": "^2.3.3"
