@@ -1,108 +1,96 @@
 var test = require('tape');
-var protocol = require('./net-oce-protocol');
+var createClient = require('./net-oce-protocol');
+var through = require('through');
 
-var Response = protocol.NetOCE_Response;
-var type_mapping = [
-  '',
-  'double_value',
-  'float_value',
-  'int32_value',
-  'int64_value',
-  'uint32_value',
-  'uint64_value',
-  'sint32_value',
-  'sint64_value',
-  'fixed32_value',
-  'fixed64_value',
-  'sfixed32_value',
-  'sfixed64_value',
-  'bool_value',
-  'string_value',
-  'bytes_value'
-];
+var Response = createClient.NetOCE_Response;
 
-// TODO: consider adding a ShapeHandle class to wrap up serialization
+var getResponseArray = require('./response');
 
-function getResponseArray(obj) {
-  var ret = [];
-
-  var l = obj.values.length;
-  for (var i=0; i<l; i++) {
-    var value = obj.values[i];
-
-    if (value.type < 16) {
-      ret.push(value[type_mapping[value.type]]);
-    } else {
-      switch (value.type) {
-        case 16: // OPERATION
-        break;
-
-        case 17: // ERROR
-          ret.push(new Error(value.string_value));
-        break;
-
-        case 18: // SHAPE_HANDLE
-          ret.push({ id: value.uint32_value });
-        break;
-      }
-    }
-  }
-
-  return ret;
-}
+var inspectResponse = createClient.response.encode({"seq":1,"id":0,"value":[{"type":16,"double_value":0,"float_value":0,"int32_value":0,"int64_value":0,"uint32_value":0,"uint64_value":0,"sint32_value":0,"sint64_value":0,"fixed32_value":0,"fixed64_value":null,"sfixed32_value":0,"sfixed64_value":null,"bool_value":false,"string_value":"","bytes_value":null,"operation":{"id":1,"name":"cube","arguments":"double, double, double, double, double, double"}},{"type":16,"double_value":0,"float_value":0,"int32_value":0,"int64_value":0,"uint32_value":0,"uint64_value":0,"sint32_value":0,"sint64_value":0,"fixed32_value":0,"fixed64_value":null,"sfixed32_value":0,"sfixed64_value":null,"bool_value":false,"string_value":"","bytes_value":null,"operation":{"id":2,"name":"export_stl","arguments":"string, handle.."}},{"type":16,"double_value":0,"float_value":0,"int32_value":0,"int64_value":0,"uint32_value":0,"uint64_value":0,"sint32_value":0,"sint64_value":0,"fixed32_value":0,"fixed64_value":null,"sfixed32_value":0,"sfixed64_value":null,"bool_value":false,"string_value":"","bytes_value":null,"operation":{"id":3,"name":"op_cut","arguments":"handle, handle"}},{"type":16,"double_value":0,"float_value":0,"int32_value":0,"int64_value":0,"uint32_value":0,"uint64_value":0,"sint32_value":0,"sint64_value":0,"fixed32_value":0,"fixed64_value":null,"sfixed32_value":0,"sfixed64_value":null,"bool_value":false,"string_value":"","bytes_value":null,"operation":{"id":4,"name":"op_union","arguments":"handle, handle.."}},{"type":16,"double_value":0,"float_value":0,"int32_value":0,"int64_value":0,"uint32_value":0,"uint64_value":0,"sint32_value":0,"sint64_value":0,"fixed32_value":0,"fixed64_value":null,"sfixed32_value":0,"sfixed64_value":null,"bool_value":false,"string_value":"","bytes_value":null,"operation":{"id":5,"name":"reset","arguments":""}}]});
 
 test('double response', function(t) {
-  var response = getResponseArray({
-    values : [{
+  getResponseArray({
+    value : [{
       type: 1, // DOUBLE
       double_value: 0.1
     }]
+  }, function(e, response) {
+    t.equal(response, 0.1);
+    t.end();
   });
-
-  t.equal(response.length, 1);
-  t.equal(response[0], 0.1);
-
-  t.end();
 });
 
 test('boolean response', function(t) {
-  var response = getResponseArray({
-    values : [{
+  getResponseArray({
+    value : [{
       type: 13, // BOOL
       bool_value: 0
     }]
+  }, function(e, response) {
+    t.equal(!!response, false);
+    t.end();
   });
-
-  t.equal(response.length, 1);
-  t.equal(!!response[0], false);
-
-  t.end();
 });
 
 test('error response', function(t) {
-  var response = getResponseArray({
-    values : [{
+  getResponseArray({
+    value : [{
       type: 17, // ERROR
       string_value: "you did something wrong"
     }]
+  }, function(e, response) {
+    t.ok(e);
+    t.notOk(response);
+    t.end();
   });
-
-  t.equal(response.length, 1);
-  t.ok(response[0] instanceof Error);
-
-  t.end();
 });
 
 test('shape_handle response', function(t) {
-  var response = getResponseArray({
-    values : [{
+  getResponseArray({
+    value : [{
       type: 18, // SHAPE_HANDLE
       uint32_value: 1
     }]
+  }, function(e, response) {
+    t.deepEqual(response, { id: 1 });
+    t.end();
+  });
+});
+
+test('createClient - inspect', function(t) {
+
+  var requestId = 0;
+  var stream = through(function(d) {
+    requestId++;
+
+    var req = createClient.request.decode(d);
+    if (requestId === 1) {
+      t.equal(req.method, 0);
+      t.equal(req.seq, 0);
+      t.equal(req.id, 0);
+      t.equal(req.argument.length, 0);
+
+      this.push(inspectResponse);
+    } else {
+      this.push(createClient.response.encode({
+        seq : req.seq,
+        id: req.id,
+        value : [{
+          type : 18,
+          uint32_value: 1
+        }]
+      }))
+    }
   });
 
-  t.equal(response.length, 1);
-  t.equal(response[0].id, 1)
+  createClient(stream, function(e, methods) {
+    t.notOk(e);
+    t.deepEqual(Object.keys(methods), ['cube', 'export_stl', 'op_cut', 'op_union', 'reset']);
 
-  t.end();
+    methods.cube(1, 1, 1, 1, 1, 1, function(e, cube) {
+      t.deepEqual(cube, { id: 1 });
+      stream.end();
+      t.end();
+    });
+  });
 });

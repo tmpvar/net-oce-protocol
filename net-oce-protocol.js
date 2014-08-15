@@ -5,30 +5,60 @@ var schemaContents = fs.readFileSync(path.join(__dirname, 'oce.proto'));
 var proto = require('protocol-buffers')(schemaContents);
 var obj = require('protobuf-schema').parse(schemaContents);
 
-var schema = module.exports = {
-  objects: proto
+var argumentHintParser = require('./arguments');
+var getResponseArray = require('./response');
 
-};
+var response = proto.NetOCE_Response;
+var request = proto.NetOCE_Request;
 
-obj.messages.forEach(function(message) {
-  var enums = {}
-  if (message.enums && message.enums.length) {
-    message.enums.forEach(function(e) {
-      enums[e.name] = function(str) {
-        return e.values[str];
+// extract the message type enum
+var ENUM = obj.messages.filter(function(msg) {
+  return msg.name === 'NetOCE_Value';
+})[0].enums[0].values;
+
+module.exports = createClient;
+createClient.request =  proto.NetOCE_Request;
+createClient.response =  proto.NetOCE_Response;
+
+function createClient(stream, cb) {
+  stream.once('data', function(first) {
+    var r = response.decode(first);
+
+    var queue = [];
+    stream.on('data', function(data) {
+      var fn = queue.shift();
+      getResponseArray(response.decode(data), fn);
+    });
+
+    var methods = {};
+    var seq = 1;
+    r.value.forEach(function(op) {
+      var id = op.operation.id;
+
+      methods[op.operation.name] = function(a, fn) {
+        var args;
+
+        if (Array.isArray(a)) {
+          args = a;
+        } else {
+          args = [];
+          Array.prototype.push.apply(args, arguments);
+          fn = args.pop();
+        }
+
+        var obj = {
+          method : id,
+          seq: seq++,
+          argument: argumentHintParser(op.operation.arguments, args, ENUM)
+        };
+
+        queue.push(fn);
+        stream.write(request.encode(obj));
       };
     });
-  }
 
-  var fields = {};
-  message.fields.forEach(function(field) {
-    if (enums[field.type]) {
-      fields[field.name] = enums[field.type];
-    } else {
-      fields[field.name] = field;
-    }
+    cb(null, methods);
   });
 
-  schema[message.name] = fields;
-
-});
+  stream.write(request.encode({ method: 0, seq: 0 }));
+}
