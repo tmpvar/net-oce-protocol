@@ -85,8 +85,8 @@ test('createClient - inspect', function(t) {
     t.notOk(e);
     t.deepEqual(Object.keys(methods), ['cube', 'export_stl', 'op_cut', 'op_union', 'reset']);
 
-    t.equal(methods.cube.args, 6);
-    t.equal(methods.export_stl.args, Infinity);
+    t.equal(methods.cube.argc, 6);
+    t.equal(methods.export_stl.argc, Infinity);
 
 
     methods.cube(1, 1, 1, 1, 1, 1, function(e, cube) {

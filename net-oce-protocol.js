@@ -58,7 +58,7 @@ function createClient(stream, cb) {
 
       var parts = op.operation.arguments.replace(/ /g, '').split(',');
       var infinite = parts[parts.length-1].indexOf('..') > -1;
-      genfn.args = (infinite) ? Infinity : parts.length;
+      genfn.argc = (infinite) ? Infinity : parts.length;
     });
 
     cb(null, methods);
