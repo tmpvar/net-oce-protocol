@@ -35,7 +35,7 @@ function createClient(stream, cb) {
     r.value.forEach(function(op) {
       var id = op.operation.id;
 
-      methods[op.operation.name] = function(a, fn) {
+      var genfn = methods[op.operation.name] = function(a, fn) {
         var args;
 
         if (Array.isArray(a)) {
@@ -55,6 +55,10 @@ function createClient(stream, cb) {
         queue.push(fn);
         stream.write(request.encode(obj));
       };
+
+      var parts = op.operation.arguments.replace(/ /g, '').split(',');
+      var infinite = parts[parts.length-1].indexOf('..') > -1;
+      genfn.args = (infinite) ? Infinity : parts.length;
     });
 
     cb(null, methods);
