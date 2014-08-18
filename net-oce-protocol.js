@@ -24,10 +24,17 @@ function createClient(stream, cb) {
   stream.once('data', function(first) {
     var r = response.decode(first);
 
-    var queue = [];
+    var queue = {};
+    stream.done = function() {
+      return !Object.keys(queue).length;
+    };
+
     stream.on('data', function(data) {
-      var fn = queue.shift();
-      getResponseArray(response.decode(data), fn);
+      var obj = response.decode(data);
+      var fn = queue[obj.seq];
+
+      delete queue[obj.seq];
+      getResponseArray(obj, fn);
     });
 
     var methods = {};
@@ -52,7 +59,8 @@ function createClient(stream, cb) {
           argument: argumentHintParser(op.operation.arguments, args, ENUM)
         };
 
-        queue.push(fn);
+        queue[obj.seq] = fn;
+
         stream.write(request.encode(obj));
       };
 
@@ -65,4 +73,6 @@ function createClient(stream, cb) {
   });
 
   stream.write(request.encode({ method: 0, seq: 0 }));
+
+  return stream;
 }
