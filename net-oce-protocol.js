@@ -1,7 +1,7 @@
 var path = require('path');
 var fs = require('fs');
 
-var schemaContents = fs.readFileSync(path.join(__dirname, 'oce.proto'));
+var schemaContents = fs.readFileSync(__dirname + '/oce.proto', 'utf8').toString();
 var proto = require('protocol-buffers')(schemaContents);
 var obj = require('protobuf-schema').parse(schemaContents);
 
@@ -20,17 +20,24 @@ module.exports = createClient;
 createClient.request =  proto.NetOCE_Request;
 createClient.response =  proto.NetOCE_Response;
 
+function decode(buffer) {
+  if (buffer.byteLength) {
+    buffer = new Buffer(new Uint8Array(buffer));
+  }
+
+  return response.decode(buffer);
+}
+
 function createClient(stream, cb) {
   stream.once('data', function(first) {
-    var r = response.decode(first);
-
+    var r = decode(first);
     var queue = {};
     stream.done = function() {
       return !Object.keys(queue).length;
     };
 
     stream.on('data', function(data) {
-      var obj = response.decode(data);
+      var obj = decode(data);
       var fn = queue[obj.seq];
 
       delete queue[obj.seq];
