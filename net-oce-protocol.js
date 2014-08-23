@@ -5,6 +5,8 @@ var schemaContents = fs.readFileSync(__dirname + '/oce.proto', 'utf8').toString(
 var proto = require('protocol-buffers')(schemaContents);
 var obj = require('protobuf-schema').parse(schemaContents);
 
+var BufferList = require('bl');
+
 var argumentHintParser = require('./arguments');
 var getResponseArray = require('./response');
 
@@ -20,32 +22,92 @@ module.exports = createClient;
 createClient.request =  proto.NetOCE_Request;
 createClient.response =  proto.NetOCE_Response;
 
+createClient.encodeRequest = encode;
+
+var phase = 0, decode_message_length = 0;
 function decode(buffer) {
-  if (buffer.byteLength) {
-    buffer = new Buffer(new Uint8Array(buffer));
+
+  if (phase === 0) {
+    if (buffer.length < 4) {
+      return false;
+    }
+
+    decode_message_length = buffer.readUInt32LE(0);
+    buffer.consume(4);
+    phase = 1;
   }
 
-  return response.decode(buffer);
+
+  if (buffer.length && buffer.length >= decode_message_length) {
+
+    var result = response.decode(buffer.slice(0, decode_message_length));
+    buffer.consume(decode_message_length);
+    decode_message_length = 0;
+    phase = 0;
+
+    return result;
+  }
+
+  return false
 }
 
+function encode(obj) {
+  var messageLength = request.encodingLength(obj);
+  var outgoingLength = messageLength + 4;
+  var buf = new Buffer(outgoingLength);
+  request.encode(obj, buf.slice(4));
+  buf.writeUInt32LE(messageLength, 0);
+
+  return buf;
+}
+
+var buffer = new BufferList();
+function processOceOutput(data) {
+
+  // Work around protocol-buffers and typed arrays.
+  if (data.byteLength) {
+    data = new Buffer(new Uint8Array(data));
+  }
+  buffer.append(data);
+
+  var result = [];
+  while(true) {
+
+    var obj = decode(buffer);
+    if (!obj) {
+      break;
+    }
+    result.push(obj);
+  }
+  return result;
+}
+
+
 function createClient(stream, cb) {
+  var seq = 1;
+
   stream.once('data', function(first) {
-    var r = decode(first);
+    var r = processOceOutput(first)[0];
+    if (!r) {
+      return cb(new Error('could not get methods from net-oce'))
+    }
     var queue = {};
     stream.done = function() {
       return !Object.keys(queue).length;
     };
 
     stream.on('data', function(data) {
-      var obj = decode(data);
-      var fn = queue[obj.seq];
+      var responses = processOceOutput(data);
 
-      delete queue[obj.seq];
-      getResponseArray(obj, fn);
+      responses.forEach(function(res) {
+        var fn = queue[res.seq];
+        delete queue[res.seq];
+        getResponseArray(res, fn);
+      });
     });
 
     var methods = {};
-    var seq = 1;
+
     r.value.forEach(function(op) {
       var id = op.operation.id;
 
@@ -68,7 +130,7 @@ function createClient(stream, cb) {
 
         queue[obj.seq] = fn;
 
-        stream.write(request.encode(obj));
+        stream.write(encode(obj));
       };
 
       var parts = op.operation.arguments.replace(/ /g, '').split(',');
@@ -79,7 +141,7 @@ function createClient(stream, cb) {
     cb(null, methods);
   });
 
-  stream.write(request.encode({ method: 0, seq: 0 }));
+  stream.write(encode({ method: 0, seq: seq++ }));
 
   return stream;
 }

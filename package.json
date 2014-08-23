@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "protocol definition for talking with net-oce",
   "dependencies": {
+    "bl": "^0.9.1",
     "brfs": "^1.2.0",
     "protobuf-schema": "^1.0.2",
     "protocol-buffers": "^2.3.3"
