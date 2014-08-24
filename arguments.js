@@ -19,24 +19,28 @@ function argumentHintParser(hint, args, ENUM) {
   var lastHint = null;
   var repeating = false;
 
-  return args.map(function (arg, i) {
+  if (args) {
+    return args.map(function (arg, i) {
 
-    var hint = parts[i];
-    if (typeof parts[i] === 'undefined') {
-      if (repeating) {
-        hint = lastHint;
+      var hint = parts[i];
+      if (typeof parts[i] === 'undefined') {
+        if (repeating) {
+          hint = lastHint;
+        }
+      } else {
+
+        if (hint.indexOf('..') > -1) {
+          repeating = true;
+          hint = hint.replace('..', '');
+        }
+
+        lastHint = hint;
       }
-    } else {
 
-      if (hint.indexOf('..') > -1) {
-        repeating = true;
-        hint = hint.replace('..', '');
-      }
+      return hintMap[hint] && hintMap[hint](args[i]);
 
-      lastHint = hint;
-    }
-
-    return hintMap[hint](args[i]);
-
-  });
+    }).filter(Boolean);
+  } else {
+    return [];
+  }
 }
