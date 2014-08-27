@@ -26,6 +26,7 @@ message NetOCE_Value {
     OPERATION = 16;
     ERROR = 17;
     SHAPE_HANDLE = 18;
+    FLOAT_BUFFER = 19;
   }
 
   required Type type = 23;

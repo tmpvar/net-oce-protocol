@@ -19,6 +19,12 @@ var type_mapping = [
 
 module.exports = getResponseArray;
 
+function copy(src)  {
+  var dst = new ArrayBuffer(src.byteLength);
+  new Uint8Array(dst).set(new Uint8Array(src));
+  return dst;
+}
+
 function getResponseArray(obj, fn) {
   var ret = [];
 
@@ -39,6 +45,10 @@ function getResponseArray(obj, fn) {
 
         case 18: // SHAPE_HANDLE
           ret.push({ id: value.uint32_value });
+        break;
+
+        case 19:
+          ret.push(new Float32Array(copy(value.bytes_value)));
         break;
       }
     }
