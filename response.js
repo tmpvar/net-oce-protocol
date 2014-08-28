@@ -50,6 +50,10 @@ function getResponseArray(obj, fn) {
         case 19:
           ret.push(new Float32Array(copy(value.bytes_value)));
         break;
+
+        case 20:
+          ret.push(new Float64Array(copy(value.bytes_value)));
+        break;
       }
     }
   }
