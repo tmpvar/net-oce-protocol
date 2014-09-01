@@ -20,7 +20,7 @@ var type_mapping = [
 module.exports = getResponseArray;
 
 function copy(src)  {
-  var dst = new ArrayBuffer(src.byteLength);
+  var dst = new ArrayBuffer((src.byteLength || src.length));
   new Uint8Array(dst).set(new Uint8Array(src));
   return dst;
 }
