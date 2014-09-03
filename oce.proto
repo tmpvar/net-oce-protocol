@@ -28,10 +28,10 @@ message NetOCE_Value {
     SHAPE_HANDLE = 18;
     FLOAT_BUFFER = 19;
     DOUBLE_BUFFER = 20;
+    ARRAY = 21;
   }
 
   required Type type = 23;
-
   optional double           double_value   = 24;
   optional float            float_value    = 25;
   optional int32            int32_value    = 26;
@@ -48,6 +48,7 @@ message NetOCE_Value {
   optional string           string_value   = 37;
   optional bytes            bytes_value    = 38;
   optional NetOCE_Operation operation      = 39;
+  repeated NetOCE_Value     item           = 40;
 }
 
 message NetOCE_Request {
@@ -60,5 +61,5 @@ message NetOCE_Request {
 message NetOCE_Response {
   required uint32          seq       = 12;
   optional uint32          id        = 13;
-  repeated NetOCE_Value    value     = 14;
+  repeated NetOCE_Value    value     = 15;
 }
