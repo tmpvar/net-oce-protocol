@@ -44,15 +44,15 @@ function mapValues(value, ret, fn) {
         ret.push({ id: value.uint32_value });
       break;
 
-      case 19:
+      case 19: // FLOAT_BUFFER
         ret.push(new Float32Array(copy(value.bytes_value)));
       break;
 
-      case 20:
+      case 20: // DOUBLE_BUFFER
         ret.push(new Float64Array(copy(value.bytes_value)));
       break;
 
-      case 21:
+      case 21: // OBJECT
         var l = value.item.length;
         var pack = {};
 
@@ -65,6 +65,10 @@ function mapValues(value, ret, fn) {
         }
         ret.push(pack);
 
+      break;
+
+      case 22: // UINT32_BUFFER
+        ret.push(new Uint32Array(copy(value.bytes_value)));
       break;
     }
   }

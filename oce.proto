@@ -28,7 +28,9 @@ message NetOCE_Value {
     SHAPE_HANDLE = 18;
     FLOAT_BUFFER = 19;
     DOUBLE_BUFFER = 20;
-    ARRAY = 21;
+    OBJECT = 21;
+    UINT32_BUFFER = 22;
+
   }
 
   required Type type = 23;
