@@ -37,7 +37,6 @@ function mapValues(obj, value, ret, fn) {
 
       case 17: // ERROR
         var error = new Error(value.string_value);
-        console.error(value.string_value);
         error.responseObject = obj;
         fn(error);
         return null;
