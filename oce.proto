@@ -56,12 +56,10 @@ message NetOCE_Value {
 message NetOCE_Request {
   required uint32          method    = 1;
   required uint32          seq       = 2;
-  optional uint32          id        = 3;
   repeated NetOCE_Value    argument = 4;
 }
 
 message NetOCE_Response {
   required uint32          seq       = 12;
-  optional uint32          id        = 13;
   repeated NetOCE_Value    value     = 15;
 }
