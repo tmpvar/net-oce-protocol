@@ -25,7 +25,7 @@ function copy(src)  {
   return dst;
 }
 
-function mapValues(value, ret, fn) {
+function mapValues(obj, value, ret, fn) {
   ret = ret || [];
 
   if (value.type < 16) {
@@ -36,7 +36,10 @@ function mapValues(value, ret, fn) {
       break;
 
       case 17: // ERROR
-        fn(new Error(value.string_value));
+        var error = new Error(value.string_value);
+        console.error(value.string_value);
+        error.responseObject = obj;
+        fn(error);
         return null;
       break;
 
@@ -58,7 +61,7 @@ function mapValues(value, ret, fn) {
 
         for (var i=0; i<l; i++) {
           var subvalue = value.item[i];
-          var collected = mapValues(subvalue, [], fn);
+          var collected = mapValues(obj, subvalue, [], fn);
           if (collected) {
             pack[subvalue.string_value] = collected[0];
           }
@@ -80,7 +83,7 @@ function getResponseArray(obj, fn) {
 
   var l = obj.value.length;
   for (var i=0; i<l; i++) {
-    if (mapValues(obj.value[i], ret, fn) === null) {
+    if (mapValues(obj, obj.value[i], ret, fn) === null) {
       return;
     }
   }
