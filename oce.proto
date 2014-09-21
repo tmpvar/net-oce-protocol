@@ -69,6 +69,8 @@ message NetOCE_Graph_Modification {
     CREATE = 1;
     DELETE = 2;
     MODIFY = 3;
+    LINK   = 4;
+    UNLINK = 5;
   }
 
   required OperationType operation = 1;
