@@ -63,3 +63,23 @@ message NetOCE_Response {
   required uint32          seq       = 12;
   repeated NetOCE_Value    value     = 15;
 }
+
+message NetOCE_Graph_Modification {
+  enum OperationType {
+    CREATE = 1;
+    DELETE = 2;
+    MODIFY = 3;
+  }
+
+  required OperationType operation = 1;
+  required uint32 id = 2;
+  required NetOCE_Request request = 3;
+}
+
+message NetOCE_Request_Batch {
+  repeated NetOCE_Graph_Modification diff = 1;
+}
+
+message NetOCE_Response_Batch {
+  repeated NetOCE_Response responses = 1;
+}
