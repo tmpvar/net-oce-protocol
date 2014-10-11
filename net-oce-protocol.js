@@ -1,5 +1,6 @@
 var path = require('path');
 var fs = require('fs');
+var varargs = require('varargs');
 
 var schemaContents = fs.readFileSync(__dirname + '/oce.proto', 'utf8').toString();
 var proto = require('protocol-buffers')(schemaContents);
@@ -117,8 +118,7 @@ function createClient(stream, cb) {
         if (Array.isArray(a)) {
           args = a;
         } else {
-          args = [];
-          Array.prototype.push.apply(args, arguments);
+          args = varargs(arguments);
           fn = args.pop();
         }
 

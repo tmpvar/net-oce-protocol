@@ -6,7 +6,8 @@
     "bl": "^0.9.1",
     "brfs": "^1.2.0",
     "protobuf-schema": "^1.0.2",
-    "protocol-buffers": "^2.3.6"
+    "protocol-buffers": "^2.3.6",
+    "varargs": "^1.0.0"
   },
   "browserify": {
     "transform": [
