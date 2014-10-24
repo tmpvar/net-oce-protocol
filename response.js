@@ -14,7 +14,19 @@ var type_mapping = [
   'sfixed64_value',
   'bool_value',
   'string_value',
-  'bytes_value'
+  'bytes_value',
+  ''
+];
+
+var primitive_mapping = [
+  'line',
+  'circle',
+  'ellipse',
+  'hyperbola',
+  'parabola',
+  'bezier',
+  'bspline',
+  'other'
 ];
 
 module.exports = getResponseArray;
@@ -71,6 +83,29 @@ function mapValues(obj, value, ret, fn) {
 
       case 22: // UINT32_BUFFER
         ret.push(new Uint32Array(copy(value.bytes_value)));
+      break;
+
+      case 23: // ARRAY
+
+        var l = value.item.length;
+        var pack = [];
+
+        for (var i=0; i<l; i++) {
+          var subvalue = value.item[i];
+          var collected = mapValues(obj, subvalue, [], fn);
+          if (collected) {
+            pack.push(collected[0]);
+          }
+        }
+        ret.push(pack);
+      break;
+
+      case 24:
+        ret.push(primitive_mapping[value.prim_type]);
+      break;
+
+      default:
+        console.log('unhandled type!', value.type)
       break;
     }
   }

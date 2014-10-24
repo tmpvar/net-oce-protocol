@@ -63,8 +63,8 @@ message NetOCE_Value {
   optional string           string_value   = 137;
   optional bytes            bytes_value    = 138;
   optional NetOCE_Operation operation      = 139;
-  repeated NetOCE_Value     item           = 140;
-  optional PrimType         prim_type      = 141;
+  optional PrimType         prim_type      = 140;
+  repeated NetOCE_Value     item           = 141;
 }
 
 message NetOCE_Request {
