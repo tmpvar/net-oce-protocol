@@ -128,6 +128,10 @@ function createClient(stream, cb) {
           argument: argumentHintParser(op.operation.arguments, args, ENUM)
         };
 
+        if (fn._shapeId) {
+          obj.shape_id = fn._shapeId;
+        }
+
         queue[obj.seq] = fn;
 
         stream.write(encode(obj));
