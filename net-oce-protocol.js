@@ -128,8 +128,9 @@ function createClient(stream, cb) {
           argument: argumentHintParser(op.operation.arguments, args, ENUM)
         };
 
-        if (fn._shapeId) {
-          obj.shape_id = fn._shapeId;
+        // Allow callers to scope this to a Shape object
+        if (typeof this.id === 'number') {
+          obj.shape_id = this.id;
         }
 
         queue[obj.seq] = fn;
